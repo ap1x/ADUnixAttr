@@ -1,3 +1,5 @@
+#Requires -Modules "ActiveDirectory"
+
 function Get-ADUserUA
 {
     Param(
@@ -19,11 +21,11 @@ function Get-ADUserUA
 
     $GetADUserParams["-Properties"] = "*"
 
-    if ($Filter) { $Users = Get-ADUser -Filter $Filter @GetADUserParams }
-    if ($Identity) { $Users = Get-ADUser -Identity $Identity @GetADUserParams }
-    if ($LDAPFilter) { $Users = Get-ADUser -LDAPFilter $LDAPFilter @GetADUserParams }
+    if ($Filter) { $GetADUserParams["-Filter"] = $Filter }
+    if ($Identity) { $GetADUserParams["-Identity"] = $Identity }
+    if ($LDAPFilter) { $GetADUserParams["-LDAPFilter"] = $LDAPFilter }
 
-    $Users | Select-Object -Property "SamAccountName","uidNumber","gidNumber","Name","unixHomeDirectory","Loginshell"
+    Get-ADUser @GetADUserParams | Select-Object -Property "SamAccountName","uidNumber","gidNumber","Name","unixHomeDirectory","Loginshell"
 }
 
 function Get-ADGroupUA
@@ -47,11 +49,11 @@ function Get-ADGroupUA
 
     $GetADGroupParams["-Properties"] = "*"
 
-    if ($Filter) { $Groups = Get-ADGroup -Filter $Filter @GetADGroupParams }
-    if ($Identity) { $Groups = Get-ADGroup -Identity $Identity @GetADGroupParams }
-    if ($LDAPFilter) { $Groups = Get-ADGroup -LDAPFilter $LDAPFilter @GetADGroupParams }
+    if ($Filter) { $GetADGroupParams["-Filter"] = $Filter }
+    if ($Identity) { $GetADGroupParams["-Identity"] = $Identity }
+    if ($LDAPFilter) { $GetADGroupParams["-LDAPFilter"] = $LDAPFilter }
 
-    $Groups | Select-Object -Property "SamAccountName","gidNumber"
+    Get-ADGroup @GetADGroupParams | Select-Object -Property "SamAccountName","gidNumber"
 }
 
 function Set-ADUserUA
@@ -77,10 +79,31 @@ function Set-ADUserUA
         $SetADUserParams = @{}
     )
 
-    if ($uidNumber) { Set-ADUser -Identity $Identity -Replace @{"uidNumber"=$uidNumber} @SetADUserParams }
-    if ($gidNumber) { Set-ADUser -Identity $Identity -Replace @{"gidNumber"=$gidNumber} @SetADUserParams }
-    if ($unixHomeDirectory) { Set-ADUser -Identity $Identity -Replace @{"unixHomeDirectory"=$unixHomeDirectory} @SetADUserParams }
-    if ($Loginshell) { Set-ADUser -Identity $Identity -Replace @{"Loginshell"=$Loginshell} @SetADUserParams }
+    $Attributes = @{}
+
+    if ($uidNumber) { $Attributes["uidNumber"] = $uidNumber }
+    if ($gidNumber) { $Attributes["gidNumber"] = $gidNumber }
+    if ($unixHomeDirectory) { $Attributes["unixHomeDirectory"] = $unixHomeDirectory }
+    if ($Loginshell) { $Attributes["Loginshell"] = $Loginshell }
+    
+    Set-ADUser -Identity $Identity -Replace $Attributes @SetADUserParams
 }
 
-function Set-ADGroupUA {}
+function Set-ADGroupUA
+{
+    Param(
+        [Parameter(Mandatory, ParameterSetName="Identity", Position=0)]
+        [Microsoft.ActiveDirectory.Management.ADGroup]
+        $Identity,       
+        
+        [int]
+        $gidNumber,       
+
+        [hashtable]
+        $SetADGroupParams = @{}
+    )
+
+    $Attributes = @{"gidNumber"=$gidNumber}
+
+    Set-ADGroup -Identity $Identity -Replace $Attributes @SetADGroupParams
+}
