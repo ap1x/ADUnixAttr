@@ -2,6 +2,8 @@
 
 function Get-ADUserUA
 {
+    [CmdletBinding(DefaultParameterSetName="Identity")]
+    
     Param(
         [Parameter(Mandatory, ParameterSetName="Filter")]
         [string]
@@ -30,6 +32,8 @@ function Get-ADUserUA
 
 function Get-ADGroupUA
 {
+    [CmdletBinding(DefaultParameterSetName="Identity")]
+    
     Param(
         [Parameter(Mandatory, ParameterSetName="Filter")]
         [string]
