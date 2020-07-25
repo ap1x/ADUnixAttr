@@ -85,7 +85,20 @@ function Set-ADUserUA
 
     $Attributes = @{}
 
-    if ($uidNumber) { $Attributes["uidNumber"] = $uidNumber }
+    if ($uidNumber)
+    {
+        # verify uidNumber is not already in use
+        if (Get-ADUserUA -Filter * | where { $_.uidNumber -eq $uidNumber })
+        {
+            $takenuser = (Get-ADUserUA -Filter * | where { $_.uidNumber -eq $uidNumber }).SamAccountName
+            throw "uidNumber $uidNumber already belongs to user $takenuser"
+        }
+        else
+        {
+            $Attributes["uidNumber"] = $uidNumber
+        }
+    }
+    
     if ($gidNumber) { $Attributes["gidNumber"] = $gidNumber }
     if ($unixHomeDirectory) { $Attributes["unixHomeDirectory"] = $unixHomeDirectory }
     if ($Loginshell) { $Attributes["Loginshell"] = $Loginshell }
@@ -107,7 +120,21 @@ function Set-ADGroupUA
         $SetADGroupParams = @{}
     )
 
-    $Attributes = @{"gidNumber"=$gidNumber}
+    $Attributes = @{}
+
+    if ($gidNumber)
+    {
+        # verify gidNumber is not already in use
+        if (Get-ADGroupUA -Filter * | where { $_.gidNumber -eq $gidNumber })
+        {
+            $takengroup = (Get-ADGroupUA -Filter * | where { $_.gidNumber -eq $gidNumber }).SamAccountName
+            throw "gidNumber $gidNumber already belongs to group $takengroup"
+        }
+        else
+        {
+            $Attributes["gidNumber"] = $gidNumber
+        }
+    }
 
     Set-ADGroup -Identity $Identity -Replace $Attributes @SetADGroupParams
 }
