@@ -63,25 +63,40 @@ function Get-ADGroupUA
 function Set-ADUserUA
 {
     Param(
-        [Parameter(Mandatory, ParameterSetName="Identity", Position=0)]
+        [Parameter(Mandatory, Position=0)]
         [Microsoft.ActiveDirectory.Management.ADUser]
         $Identity,
         
+        [Parameter(ParameterSetName="SetAttr")]
         [int]
         $uidNumber,
         
+        [Parameter(ParameterSetName="SetAttr")]
         [int]
         $gidNumber,
         
+        [Parameter(ParameterSetName="SetAttr")]
         [string]
         $unixHomeDirectory,        
         
+        [Parameter(ParameterSetName="SetAttr")]
         [string]
         $Loginshell,
 
+        [Parameter(ParameterSetName="SetAttr")]
         [hashtable]
-        $SetADUserParams = @{}
+        $SetADUserParams = @{},
+
+        [Parameter(ParameterSetName="Clear")]
+        [switch]
+        $Clear = $false
     )
+
+    if ($Clear)
+    {
+        Set-ADUser -Identity $Identity -Clear "uidNumber","gidNumber","unixHomeDirectory","LoginShell"
+        return
+    }
 
     $Attributes = @{}
 
@@ -109,16 +124,28 @@ function Set-ADUserUA
 function Set-ADGroupUA
 {
     Param(
-        [Parameter(Mandatory, ParameterSetName="Identity", Position=0)]
+        [Parameter(Mandatory, Position=0)]
         [Microsoft.ActiveDirectory.Management.ADGroup]
         $Identity,       
         
+        [Parameter(ParameterSetName="SetAttr")]
         [int]
         $gidNumber,       
 
+        [Parameter(ParameterSetName="SetAttr")]
         [hashtable]
-        $SetADGroupParams = @{}
+        $SetADGroupParams = @{},
+
+        [Parameter(ParameterSetName="Clear")]
+        [switch]
+        $Clear = $false
     )
+
+    if ($Clear)
+    {
+        Set-ADGroup -Identity $Identity -Clear "gidNumber"
+        return
+    }
 
     $Attributes = @{}
 
