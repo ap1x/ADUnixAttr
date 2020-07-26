@@ -72,7 +72,7 @@ function Set-ADUserUA
         $uidNumber,
         
         [Parameter(ParameterSetName="SetAttr")]
-        [int]
+        [string]
         $gidNumber,
         
         [Parameter(ParameterSetName="SetAttr")]
@@ -114,7 +114,24 @@ function Set-ADUserUA
         }
     }
     
-    if ($gidNumber) { $Attributes["gidNumber"] = $gidNumber }
+    if ($gidNumber)
+    {
+        # check if gidNumber is a positive integer and set normally, otherwise treat as group name
+        if ($gidNumber -match "^\d+$")
+        {
+            $Attributes["gidNumber"] = $gidNumber
+        }
+        else
+        {
+            # check if the group exists, error if not
+            $group = Get-ADGroupUA -Identity $gidNumber -ErrorAction Stop
+            
+            # check if the group has a gidNumber, error if not
+            if ( -not ($group.gidNumber)) { throw "Group $($group.SamAccountName) has no gidNumber set" }
+            $Attributes["gidNumber"] = $group.gidNumber
+        }
+    }
+    
     if ($unixHomeDirectory) { $Attributes["unixHomeDirectory"] = $unixHomeDirectory }
     if ($Loginshell) { $Attributes["Loginshell"] = $Loginshell }
     
